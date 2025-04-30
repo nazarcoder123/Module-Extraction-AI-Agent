@@ -24,7 +24,7 @@ This Streamlit application crawls a given starting URL, extracts text content fr
 1.  **Clone the repository (or download the files):**
     ```bash
     # If using git
-    # git clone <your-repo-url>
+    # git clone https://github.com/nazarcoder123/Module-Extraction-AI-Agent.git
     # cd <your-repo-directory>/s
     ```
     Ensure you are in the directory containing `app.py`, `requirements.txt`, and the `utils` folder (e.g., `e:/Gemini-Fine-Tuning/s/`).
