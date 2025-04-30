@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # Load your API key from environment variable or hardcode (not recommended)
 genai.configure(api_key="AIzaSyDn567Ef8OtU7dUr_oE5KTVsjGxPB2xkpY")
 
-model = genai.GenerativeModel("gemini-2.0-flash-lite")
+model = genai.GenerativeModel("gemini-2.5-pro-preview-03-25")
 
 def clean_json_response(text):
     """Removes Markdown code block fences and leading/trailing whitespace."""
