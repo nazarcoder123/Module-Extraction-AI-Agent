@@ -32,6 +32,8 @@ def extract_modules(text):
     Analyze the provided documentation text and identify the distinct main features, components, or conceptual areas.
     For each distinct area identified, treat it as a main module. Extract its description and any relevant sub-components or sub-topics as submodules with their descriptions.
 
+    IMPORTANT: You must extract AT LEAST 10 main modules (if possible) and a TOTAL of AT LEAST 20 submodules (across all modules) for the given documentation text. If the text is too short, extract as many as possible, but always aim for these minimums. Do not merge unrelated concepts. If you need to, break down larger modules into more granular submodules to reach the minimum count.
+
     Return the result as a JSON list, where each element in the list represents a main module and follows this format:
     [
       {{
@@ -50,10 +52,10 @@ def extract_modules(text):
           "Related Concept Y": "Description of concept Y."
         }}
       }}
-      # ... potentially more module objects
+      # ... at least 10 module objects, each with submodules, and at least 20 submodules in total
     ]
 
-    If only one main module is truly appropriate for the entire text, return a list containing just that single module object. Do not list unrelated concepts as submodules under a single overarching topic unless they genuinely belong there. Strive to identify genuinely distinct top-level modules based on the text structure and content.
+    If only one main module is truly appropriate for the entire text, return a list containing just that single module object. Do not list unrelated concepts as submodules under a single overarching topic unless they genuinely belong there. Strive to identify genuinely distinct top-level modules based on the text structure and content. If the text is too short, extract as many as possible.
 
     Documentation Text:
     {text}

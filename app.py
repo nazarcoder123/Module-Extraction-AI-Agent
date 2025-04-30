@@ -1,7 +1,6 @@
 import streamlit as st
 import logging
 import concurrent.futures
-# Import start_crawl instead of crawl
 import json # Import the json module for exception handling
 from utils.crawler import start_crawl 
 from utils.parser import extract_text_from_url
@@ -21,67 +20,48 @@ if st.button("Extract Modules"):
 
     if start_urls:
         logging.info(f"Extract Modules button clicked with URLs: {start_urls}")
-        all_pages_to_parse = set() # Use a set to automatically handle duplicates across crawls
-        texts = []
-
         try:
-            # Crawl each starting URL
-            with st.spinner(f"Crawling starting from {len(start_urls)} URLs (max 50 pages per start URL)..."):
-                for base_url in start_urls:
-                    logging.info(f"Starting crawl for URL: {base_url} with max 50 pages.")
-                    # Use start_crawl to get the list of pages for the current base_url
-                    # The max_pages limit is handled within start_crawl (default is 50)
+            for base_url in start_urls:
+                st.subheader(f"Results for: {base_url}")
+                with st.spinner(f"Crawling {base_url} (max 50 pages)..."):
                     pages_found = start_crawl(base_url)
-                    all_pages_to_parse.update(pages_found) # Add found pages to the set
-                    logging.info(f"Finished crawl for {base_url}. Found {len(pages_found)} unique pages.")
+                    logging.info(f"Finished crawl for {base_url}. Found {len(pages_found)} pages.")
 
-            # Convert the set of unique pages back to a list for parsing
-            unique_pages_list = list(all_pages_to_parse)
-            logging.info(f"Total unique pages found across all starting URLs: {len(unique_pages_list)}")
+                if not pages_found:
+                    logging.warning(f"No pages found or accessible for {base_url}.")
+                    st.warning(f"Could not find any pages to parse for: {base_url}")
+                    continue
 
-            # Check if any pages were found before attempting to parse
-            if not unique_pages_list:
-                logging.warning(f"No pages found or accessible starting from the provided URLs.")
-                st.warning(f"Could not find any pages to parse starting from the provided URL.")
-            else:
-                # Correctly indented block starts here
-                with st.spinner(f"Parsing {len(unique_pages_list)} unique pages concurrently..."), concurrent.futures.ThreadPoolExecutor() as executor:
-                    logging.info(f"Starting concurrent parsing of {len(unique_pages_list)} pages.")
-                    # Submit parsing tasks
-                    future_to_url = {executor.submit(extract_text_from_url, page): page for page in unique_pages_list}
+                texts = []
+                with st.spinner(f"Parsing {len(pages_found)} pages for {base_url}..."):
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        future_to_url = {executor.submit(extract_text_from_url, page): page for page in pages_found}
+                        for future in concurrent.futures.as_completed(future_to_url):
+                            page_url = future_to_url[future]
+                            try:
+                                text = future.result()
+                                texts.append(text)
+                                logging.info(f"Successfully parsed page: {page_url}")
+                            except Exception as exc:
+                                logging.error(f"Page {page_url} generated an exception during parsing: {exc}")
+                all_text = "\n".join(texts)
+                logging.info(f"Parsing completed for {base_url}.")
 
-                    # Collect results as they complete
-                for future in concurrent.futures.as_completed(future_to_url):
-                    page_url = future_to_url[future]
-                    try:
-                        text = future.result()
-                        texts.append(text)
-                        logging.info(f"Successfully parsed page: {page_url}")
-                    except Exception as exc:
-                        logging.error(f"Page {page_url} generated an exception during parsing: {exc}")
-
-                    all_text = "\n".join(texts)
-                    logging.info("Concurrent parsing completed.")
-
-                # This block should only execute if parsing happened (i.e., pages were found)
-                with st.spinner("Extracting modules..."):
-                    logging.info(f"Starting module extraction from combined text (length: {len(all_text)}).")
-                    result = extract_modules(all_text) # This might return None now
+                with st.spinner(f"Extracting modules for {base_url}..."):
+                    logging.info(f"Starting module extraction from combined text (length: {len(all_text)}) for {base_url}.")
+                    result = extract_modules(all_text)
 
                 if result is not None:
-                    logging.info("Module extraction completed successfully with valid JSON.")
-                    # Add try-except block for robust JSON parsing (as a final safety net)
+                    logging.info(f"Module extraction completed successfully for {base_url}.")
                     try:
                         st.json(result)
                     except json.JSONDecodeError as json_err:
-                        # This block might be less likely to be hit now, but kept for safety
-                        logging.error(f"Failed to parse JSON response even after validation in extractor. Error: {json_err}")
-                        logging.error(f"String content that failed parsing: '{result}'")
-                        st.error(f"Failed to display the result. The AI returned data that could not be parsed as JSON.")
-                        st.text_area("Raw AI Response (for debugging):", result, height=200) # Show the raw string
+                        logging.error(f"Failed to parse JSON response for {base_url}. Error: {json_err}")
+                        st.error(f"Failed to display the result for {base_url}. The AI returned data that could not be parsed as JSON.")
+                        st.text_area(f"Raw AI Response for {base_url} (for debugging):", result, height=200)
                 else:
-                    logging.warning("Module extraction failed because the AI did not return valid JSON.")
-                    st.warning("The AI could not extract modules from the content of the provided URL. The content might be unsuitable, or the AI failed to generate the expected structure.")
+                    logging.warning(f"Module extraction failed for {base_url}.")
+                    st.warning(f"The AI could not extract modules from the content of {base_url}. The content might be unsuitable, or the AI failed to generate the expected structure.")
         except Exception as e:
             logging.error(f"An error occurred during processing: {e}", exc_info=True)
             st.error(f"An error occurred: {e}")
