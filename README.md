@@ -92,7 +92,7 @@ Open your web browser and navigate to the local URL provided by Streamlit (usual
 *   `app.py`: The main Streamlit application file.
 *   `requirements.txt`: Lists Python dependencies.
 *   `Dockerfile`: Defines the Docker container build process.
-*   `README.md`: This file.
+*   `README.md`: This file contain the steps to run the application.
 *   `utils/`: Directory containing helper modules:
     *   `crawler.py`: Handles crawling web pages starting from a given URL.
     *   `parser.py`: Extracts text content from HTML.
