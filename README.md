@@ -78,16 +78,17 @@ Open your web browser and navigate to the local URL provided by Streamlit (usual
 
 ## Project Structure
 
+```
 .
-├── app.py                    # Streamlit UI to run the module extraction interactively
-├── module_extractor.py      # CLI version to extract modules from URLs
-├── utils/
-│   ├── crawler.py           # [Not uploaded] Assumed to return list of URLs after crawling a site
-│   ├── parser.py            # Parses visible text content from a given URL
-│   └── extractor.py         # Sends extracted text to Gemini to generate modules/submodules
-
-
-
+├── app.py             # Main Streamlit application file
+├── requirements.txt   # Python dependencies
+├── Dockerfile         # Docker configuration
+├── README.md          # This file
+└── utils/             # Directory for helper modules
+    ├── crawler.py     # Handles web crawling
+    ├── parser.py      # Extracts text from HTML
+    └── extractor.py   # Interacts with Gemini API
+```
 *   `app.py`: The main Streamlit application file.
 *   `requirements.txt`: Lists Python dependencies.
 *   `Dockerfile`: Defines the Docker container build process.
