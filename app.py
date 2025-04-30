@@ -11,35 +11,45 @@ from utils.extractor import extract_modules
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 st.title("🤖 Module Extraction AI Agent")
-# Changed from text_area to text_input for a single URL
-url_input = st.text_input("Enter the help documentation URL:")
+
+# Use text_area for multiple URLs, one per line
+url_input_area = st.text_area("Enter documentation URLs (one per line):", height=100)
 
 if st.button("Extract Modules"):
-    # Check if url_input is not empty
-    if url_input:
-        base_url = url_input.strip() # Use the input directly
-        logging.info(f"Extract Modules button clicked with URL: {base_url}")
-        # Removed all_pages_to_parse initialization here
+    # Split the input into a list of URLs, stripping whitespace and removing empty lines
+    start_urls = [url.strip() for url in url_input_area.splitlines() if url.strip()]
+
+    if start_urls:
+        logging.info(f"Extract Modules button clicked with URLs: {start_urls}")
+        all_pages_to_parse = set() # Use a set to automatically handle duplicates across crawls
         texts = []
+
         try:
-            with st.spinner("Crawling (max 50 pages)..."): # Updated spinner text
-                logging.info(f"Starting crawl for URL: {base_url} with max 50 pages.")
-                # Use start_crawl to get the list of pages directly
-                # The max_pages limit is handled within start_crawl (default is 50)
-                all_pages_to_parse = start_crawl(base_url) 
-                # Logging of found pages is now inside start_crawl
+            # Crawl each starting URL
+            with st.spinner(f"Crawling starting from {len(start_urls)} URLs (max 50 pages per start URL)..."):
+                for base_url in start_urls:
+                    logging.info(f"Starting crawl for URL: {base_url} with max 50 pages.")
+                    # Use start_crawl to get the list of pages for the current base_url
+                    # The max_pages limit is handled within start_crawl (default is 50)
+                    pages_found = start_crawl(base_url)
+                    all_pages_to_parse.update(pages_found) # Add found pages to the set
+                    logging.info(f"Finished crawl for {base_url}. Found {len(pages_found)} unique pages.")
+
+            # Convert the set of unique pages back to a list for parsing
+            unique_pages_list = list(all_pages_to_parse)
+            logging.info(f"Total unique pages found across all starting URLs: {len(unique_pages_list)}")
 
             # Check if any pages were found before attempting to parse
-            if not all_pages_to_parse:
-                logging.warning(f"No pages found or accessible starting from {base_url}.")
+            if not unique_pages_list:
+                logging.warning(f"No pages found or accessible starting from the provided URLs.")
                 st.warning(f"Could not find any pages to parse starting from the provided URL.")
             else:
                 # Correctly indented block starts here
-                with st.spinner(f"Parsing {len(all_pages_to_parse)} pages concurrently..."), concurrent.futures.ThreadPoolExecutor() as executor: # Updated spinner text
-                    logging.info(f"Starting concurrent parsing of {len(all_pages_to_parse)} pages.")
+                with st.spinner(f"Parsing {len(unique_pages_list)} unique pages concurrently..."), concurrent.futures.ThreadPoolExecutor() as executor:
+                    logging.info(f"Starting concurrent parsing of {len(unique_pages_list)} pages.")
                     # Submit parsing tasks
-                    future_to_url = {executor.submit(extract_text_from_url, page): page for page in all_pages_to_parse}
-                    
+                    future_to_url = {executor.submit(extract_text_from_url, page): page for page in unique_pages_list}
+
                     # Collect results as they complete
                 for future in concurrent.futures.as_completed(future_to_url):
                     page_url = future_to_url[future]
@@ -49,7 +59,7 @@ if st.button("Extract Modules"):
                         logging.info(f"Successfully parsed page: {page_url}")
                     except Exception as exc:
                         logging.error(f"Page {page_url} generated an exception during parsing: {exc}")
-                    
+
                     all_text = "\n".join(texts)
                     logging.info("Concurrent parsing completed.")
 
@@ -57,7 +67,7 @@ if st.button("Extract Modules"):
                 with st.spinner("Extracting modules..."):
                     logging.info(f"Starting module extraction from combined text (length: {len(all_text)}).")
                     result = extract_modules(all_text) # This might return None now
-                
+
                 if result is not None:
                     logging.info("Module extraction completed successfully with valid JSON.")
                     # Add try-except block for robust JSON parsing (as a final safety net)
