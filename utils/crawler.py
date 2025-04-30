@@ -4,7 +4,7 @@ from urllib.parse import urljoin, urlparse
 import logging # Add logging
 
 # Configure logging for this module if not already configured globally
-# logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Added max_pages parameter with a default limit
 def crawl(url, visited=None, max_pages=50): 
