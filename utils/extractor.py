@@ -29,19 +29,36 @@ def clean_json_response(text):
 
 def extract_modules(text):
     prompt = f"""
-    Extract main modules and submodules from the given documentation text.
-    Return the result in the following JSON format:
-    {{
-        "module": "Module_1",
-        "Description": "Description of Module_1",
+    Analyze the provided documentation text and identify the distinct main features, components, or conceptual areas.
+    For each distinct area identified, treat it as a main module. Extract its description and any relevant sub-components or sub-topics as submodules with their descriptions.
+
+    Return the result as a JSON list, where each element in the list represents a main module and follows this format:
+    [
+      {{
+        "module": "Example Module Name 1",
+        "Description": "Brief description of what Example Module 1 covers.",
         "Submodules": {{
-            "submodule_1": "Description of submodule_1",
-            "submodule_2": "Description of submodule_2"
+          "Sub Feature A": "Description of sub feature A.",
+          "Sub Feature B": "Description of sub feature B."
         }}
-    }}
+      }},
+      {{
+        "module": "Example Module Name 2",
+        "Description": "Brief description of Example Module 2.",
+        "Submodules": {{
+          "Related Concept X": "Description of concept X.",
+          "Related Concept Y": "Description of concept Y."
+        }}
+      }}
+      # ... potentially more module objects
+    ]
+
+    If only one main module is truly appropriate for the entire text, return a list containing just that single module object. Do not list unrelated concepts as submodules under a single overarching topic unless they genuinely belong there. Strive to identify genuinely distinct top-level modules based on the text structure and content.
+
     Documentation Text:
     {text}
     """
+
     logging.info("Starting module extraction.")
     try:
         response = model.generate_content(prompt)
