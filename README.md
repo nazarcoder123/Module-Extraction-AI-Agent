@@ -83,7 +83,7 @@ Open your web browser and navigate to the local URL provided by Streamlit (usual
 ├── app.py             # Main Streamlit application file
 ├── requirements.txt   # Python dependencies
 ├── Dockerfile         # Docker configuration
-├── README.md          # This file
+├── README.md          # This file contain the steps to run the application.
 └── utils/             # Directory for helper modules
     ├── crawler.py     # Handles web crawling
     ├── parser.py      # Extracts text from HTML
